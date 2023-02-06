@@ -1,3 +1,4 @@
+import { Role } from 'src/iam/enums/role.enum';
 import {
   Column,
   CreateDateColumn,
@@ -22,6 +23,9 @@ export class User {
 
   @Column()
   password: string;
+
+  @Column('simple-array', { default: Role.User })
+  roles: Array<Role>;
 
   @Column({ nullable: true })
   hashRT: string;

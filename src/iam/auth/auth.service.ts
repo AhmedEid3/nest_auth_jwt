@@ -2,9 +2,10 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
-import { AuthDto } from './dto/auth.dto';
+import { SignInDto } from './dto/sign-in.dto';
 import { HashingService } from '../hashing/hashing.service';
 import { ActiveUserData } from '../interfaces/active-user-data.interface';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -23,7 +24,7 @@ export class AuthService {
    * store hash of refresh token in db
    * return {access_token, refresh_token}
    */
-  async signUp(authDto: AuthDto) {
+  async signUp(authDto: CreateUserDto) {
     try {
       const user = await this.usersService.create(authDto);
 
@@ -43,7 +44,7 @@ export class AuthService {
    * generate refresh token
    * return {access_token, refresh_token}
    */
-  async signIn(authDto: AuthDto) {
+  async signIn(authDto: SignInDto) {
     const user = await this.usersService.findOneByName(authDto.name);
 
     const isPasswordMatched = await this.hashingService.compare(
@@ -104,7 +105,11 @@ export class AuthService {
   }
 
   private async generateAccessAndRefreshTokens(user: User) {
-    const payload: ActiveUserData = { sub: user.id, username: user.name };
+    const payload: ActiveUserData = {
+      sub: user.id,
+      username: user.name,
+      roles: user.roles,
+    };
 
     const [accessToken, refreshToken] = await Promise.all([
       this.generateAccessToken(payload),

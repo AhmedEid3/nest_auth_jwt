@@ -8,11 +8,12 @@ import {
 } from '@nestjs/common';
 import { ActiveUser } from '../decorators/active-user.decorator';
 import { Public } from '../decorators/public.decorator';
-import { AuthDto } from './dto/auth.dto';
+import { SignInDto } from './dto/sign-in.dto';
 
 import { ActiveUserData } from '../interfaces/active-user-data.interface';
 import { AuthService } from './auth.service';
 import { RefreshTokenGuard } from '../guards/refresh-token.guard';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -20,14 +21,14 @@ export class AuthController {
 
   @Public()
   @Post('local/sign-up')
-  signUp(@Body() authDto: AuthDto) {
+  signUp(@Body() authDto: CreateUserDto) {
     return this.authService.signUp(authDto);
   }
 
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('local/sign-in')
-  signIn(@Body() authDto: AuthDto) {
+  async signIn(@Body() authDto: SignInDto) {
     return this.authService.signIn(authDto);
   }
 
