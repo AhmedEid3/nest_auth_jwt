@@ -1,33 +1,44 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import * as argon2 from 'argon2';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { HashingService } from 'src/hashing/hashing.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly hashingService: HashingService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    /**
-     * hash password
-     * create user with hash password in db
-     * return user
-     */
+    try {
+      const hashPassword = await this.hashingService.hash(
+        createUserDto.password,
+      );
 
-    const hashPassword = await argon2.hash(createUserDto.password);
+      const userDto: CreateUserDto = {
+        ...createUserDto,
+        password: hashPassword,
+      };
 
-    const createUser = this.userRepository.create({
-      ...createUserDto,
-      password: hashPassword,
-    });
+      const createUser = this.userRepository.create(userDto);
+      const user = await this.userRepository.save(createUser);
+      return user;
+    } catch (error) {
+      const pgUniqueViolationErrorCode = '23505';
+      if (error.code === pgUniqueViolationErrorCode) {
+        throw new ConflictException('User Name Exist!');
+      }
 
-    return this.userRepository.save(createUser);
+      throw error;
+    }
   }
 
   findAll() {
@@ -47,7 +58,9 @@ export class UsersService {
   }
 
   async updateRefreshToken(id: number, refreshToken: string) {
-    const hashRT = refreshToken ? await argon2.hash(refreshToken) : '';
+    const hashRT = refreshToken
+      ? await this.hashingService.hash(refreshToken)
+      : '';
 
     const updateUser = await this.userRepository.preload({
       id,

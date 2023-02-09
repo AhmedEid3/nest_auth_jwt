@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { SignInDto } from './dto/sign-in.dto';
-import { HashingService } from '../hashing/hashing.service';
+import { HashingService } from '../../hashing/hashing.service';
 import { ActiveUserData } from '../interfaces/active-user-data.interface';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 
